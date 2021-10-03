@@ -1,6 +1,17 @@
+import uuid
+import os
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
                                             PermissionsMixin
+from django.db.models.fields.related import ForeignKey
+
+
+def recipe_image_file_path(instance, filename):
+    """Generate file path for new recipe image"""
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+
+    return os.path.join('uploads/recipe/', filename)
 
 
 class UserManager(BaseUserManager):
@@ -35,3 +46,21 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
+
+
+class Family(models.Model):
+    """Family of users"""
+    name = models.CharField(max_length=255)
+    # image = models.ImageField(null=True, upload_to=recipe_image_file_path)
+
+    def __str__(self):
+        return self.name
+
+
+class UserProfile(models.Model):
+    """Extending user model with a user profile model"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    family = models.ForeignKey(Family, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.user.name

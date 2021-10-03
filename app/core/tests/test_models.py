@@ -1,5 +1,11 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from core import models
+
+
+def sample_user(email='test@londonappdev.com', password='testpass'):
+    """Create a sample user"""
+    return get_user_model().objects.create_user(email, password)
 
 
 class ModelTests(TestCase):
@@ -37,3 +43,11 @@ class ModelTests(TestCase):
 
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+
+    def test_family_str(self):
+        """Test the family string representation"""
+        tag = models.Family.objects.create(
+            name='Test Family'
+        )
+
+        self.assertEqual(str(tag), tag.name)
