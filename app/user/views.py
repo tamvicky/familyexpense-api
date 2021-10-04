@@ -1,8 +1,11 @@
 from rest_framework import generics, authentication, permissions
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from user.serializers import UserSerializer, AuthTokenSerializer
+from core.models import UserProfile
+from user.serializers import UserSerializer, AuthTokenSerializer, UserProfileSerializer
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -24,3 +27,15 @@ class ManageUserView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class UserProfileView(APIView):
+    """User profile view"""
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, format=None):
+        user_profile = UserProfile.objects.get(user=self.request.user);
+        serializer = UserProfileSerializer(user_profile, many=False)
+        
+        return Response(serializer.data)

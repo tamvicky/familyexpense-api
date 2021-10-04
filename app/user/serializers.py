@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model, authenticate
 from django.utils.translation import ugettext_lazy as _
+from core.models import UserProfile, Family
 
 from rest_framework import serializers
 
@@ -52,3 +53,20 @@ class AuthTokenSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
+class FamilySerializer(serializers.ModelSerializer):
+    """Serializer for family"""
+    class Meta:
+        model = Family
+        fields = '__all__'
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    """Serializer for user profile"""
+    user = UserSerializer(required=True)
+    family = FamilySerializer(required=False)
+
+    class Meta:
+        model = UserProfile
+        fields = ('user', 'family',)
