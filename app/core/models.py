@@ -3,6 +3,7 @@ import os
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
                                             PermissionsMixin
+from django.conf import settings
 
 
 def recipe_image_file_path(instance, filename):
@@ -63,3 +64,25 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.name
+
+
+class Category(models.Model):
+    """Category for expenses"""
+    name = models.CharField(max_length=255)
+    isPublic = models.BooleanField(default=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
+    family = models.ForeignKey(Family, on_delete=models.CASCADE, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+         if not self.user:
+              self.user = None
+         if not self.family:
+              self.family = None
+         super(Category, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name

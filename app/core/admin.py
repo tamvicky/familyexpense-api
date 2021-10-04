@@ -24,6 +24,15 @@ class UserAdmin(BaseUserAdmin):
     )
 
 
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ['user', 'family']
+
+
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'isPublic', 'user', 'family']
+
+
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Family)
-admin.site.register(models.UserProfile)
+admin.site.register(models.UserProfile, UserProfileAdmin)
+admin.site.register(models.Category, CategoryAdmin)
