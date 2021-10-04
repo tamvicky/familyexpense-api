@@ -5,15 +5,28 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 
+from core.models import Family, UserProfile
+
 
 CREATE_USER_URL = reverse('user:create')
 TOKEN_URL = reverse('user:token')
 ME_URL = reverse('user:me')
+PROFILE_URL = reverse('user:profile')
 
 
 def create_user(**params):
     """Helper function to create new user"""
     return get_user_model().objects.create_user(**params)
+
+
+def create_family(f_name):
+    """Helper function to create new family"""
+    return Family.objects.create(name=f_name)
+
+
+def create_userprofile(u_user, u_family):
+    """Helper function to create new family"""
+    return UserProfile.objects.create(user=u_user, family=u_family)
 
 
 class PublicUserApiTests(TestCase):
@@ -101,6 +114,12 @@ class PublicUserApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_retrieve_user_profile_unauthorized(self):
+        """Test that authentication is required for user profile"""
+        res = self.client.get(PROFILE_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
 class PrivateUserApiTests(TestCase):
     """Test API requests that require authentication"""
@@ -111,6 +130,8 @@ class PrivateUserApiTests(TestCase):
             password='testpass',
             name='test name',
         )
+        self.family = create_family('test family')
+        self.user_profile = create_userprofile(self.user, self.family)
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
@@ -140,3 +161,10 @@ class PrivateUserApiTests(TestCase):
         self.assertEqual(self.user.name, payload['name'])
         self.assertTrue(self.user.check_password(payload['password']))
         self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_retrieve_user_profile_success(self):
+        """Test retrieving profile for logged in user"""
+        res = self.client.get(PROFILE_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 2)

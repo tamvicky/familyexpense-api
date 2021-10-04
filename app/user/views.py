@@ -5,7 +5,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import UserProfile
-from user.serializers import UserSerializer, AuthTokenSerializer, UserProfileSerializer
+from user.serializers import UserSerializer, \
+    AuthTokenSerializer, UserProfileSerializer
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -35,7 +36,6 @@ class UserProfileView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, format=None):
-        user_profile = UserProfile.objects.get(user=self.request.user);
+        user_profile = UserProfile.objects.get(user=self.request.user)
         serializer = UserProfileSerializer(user_profile, many=False)
-        
         return Response(serializer.data)
