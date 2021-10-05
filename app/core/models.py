@@ -75,14 +75,15 @@ class Category(models.Model):
         on_delete=models.CASCADE,
         blank=True, null=True
     )
-    family = models.ForeignKey(Family, on_delete=models.CASCADE, blank=True, null=True)
+    family = models.ForeignKey(Family, on_delete=models.CASCADE,
+                               blank=True, null=True)
 
     def save(self, *args, **kwargs):
-         if not self.user:
-              self.user = None
-         if not self.family:
-              self.family = None
-         super(Category, self).save(*args, **kwargs)
+        if not self.user:
+            self.user = None
+        if not self.family:
+            self.family = None
+        super(Category, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.name
