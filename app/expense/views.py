@@ -1,12 +1,11 @@
-from rest_framework import viewsets, mixins, authentication, permissions
+from rest_framework import viewsets, authentication, permissions
 from django.db.models import Q
 
 from core.models import Category, UserProfile
 from expense import serializers
 
 
-class CategoryViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
-                      mixins.CreateModelMixin):
+class CategoryViewSet(viewsets.ModelViewSet):
     """Manage category in the databases"""
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
@@ -23,11 +22,15 @@ class CategoryViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
                                     Q(family=userprofile.family))
 
     def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return serializers.CateogryCreateSerializer
-        else:
+        if self.request.method == 'GET':
             return serializers.CateogryListSerializer
+        else:
+            return serializers.CateogryCreateSerializer
 
     def perform_create(self, serializer):
         """Create a new category"""
         serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        """Update category"""
+        serializer.save()

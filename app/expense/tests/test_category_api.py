@@ -10,16 +10,32 @@ from core.models import Category, Family, UserProfile
 CAT_URL = reverse('expense:category-list')
 
 
-def create_sample_category_data():
-    Category.objects.create(name='cat1', isPublic=True, user=None, family=None)
-    Category.objects.create(name='cat2', isPublic=True, user=None, family=None)
+def detail_url(cat_id):
+    """Return category detail URL"""
+    return reverse('expense:category-detail', args=[cat_id])
 
 
-def create_sample_user_category_data(_user, _family):
-    Category.objects.create(name='cat3', isPublic=False,
-                            user=_user, family=_family)
-    Category.objects.create(name='cat4', isPublic=False,
-                            user=_user, family=None)
+def create_sample_public_category(**params):
+    """Create sample pubic category"""
+    defaults = {
+        'name': 'Food',
+        'isPublic': True
+    }
+    defaults.update(params)
+    return Category.objects.create(**defaults)
+
+
+def create_sample_user_category_data(user, **params):
+    """Create sample user category"""
+    defaults = {
+        'name': 'Food',
+        'isPublic': False,
+        'user': user,
+        'family': None
+    }
+
+    defaults.update(params)
+    return Category.objects.create(**defaults)
 
 
 def create_user_profile(_user, _family):
@@ -43,25 +59,28 @@ class PrivateCatApiTests(TestCase):
     """Test the category API after login"""
 
     def setUp(self):
-        create_sample_category_data()
         self.user = get_user_model().objects.create_user(
             'test@test.com',
             'password'
         )
         self.family = Family.objects.create(name='Test family')
+        create_user_profile(self.user, self.family)
         self.client = APIClient()
         self.client.force_authenticate(self.user)
 
-    def test_retrieve_cats(self):
-        """Test retrieving cats"""
+    def test_retrieve_category(self):
+        """Test retrieving category"""
+        create_sample_public_category(name='Cat1')
+        create_sample_public_category(name='Cat2')
         user2 = get_user_model().objects.create_user(
             'test2@test.com',
             'password2'
         )
-        create_user_profile(self.user, self.family)
         create_user_profile(user2, self.family)
-        create_sample_user_category_data(self.user, self.family)
-        create_sample_user_category_data(user2, self.family)
+        create_sample_user_category_data(user=self.user, family=self.family)
+        create_sample_user_category_data(user=self.user)
+        create_sample_user_category_data(user=user2, family=self.family)
+        create_sample_user_category_data(user=user2)
 
         self.client = APIClient()
         self.client.force_authenticate(self.user)
@@ -91,3 +110,31 @@ class PrivateCatApiTests(TestCase):
         res = self.client.post(CAT_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_patial_update_category(self):
+        """Test update an existing category"""
+        cat = create_sample_public_category()
+        payload = {'name': 'Updated Cat'}
+        url = detail_url(cat.id)
+        self.client.patch(url, payload)
+
+        cat.refresh_from_db()
+        self.assertEqual(cat.name, payload['name'])
+
+    def test_full_update_category(self):
+        """Test update an existing category"""
+        cat = create_sample_user_category_data(
+                user=self.user, family=self.family
+              )
+        payload = {
+                'name': 'Updated Cat',
+                'isPublic': False,
+                'user': self.user,
+                'family': ''
+            }
+        url = detail_url(cat.id)
+        self.client.put(url, payload)
+
+        cat.refresh_from_db()
+        self.assertEqual(cat.name, payload['name'])
+        self.assertEqual(cat.family, None)
