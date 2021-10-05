@@ -5,12 +5,12 @@ from core.models import Category, UserProfile
 from expense import serializers
 
 
-class CategoryViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+class CategoryViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
+                      mixins.CreateModelMixin):
     """Manage category in the databases"""
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Category.objects.all()
-    serializer_class = serializers.CateogrySerializer
 
     def get_queryset(self):
         """
@@ -21,3 +21,13 @@ class CategoryViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         return self.queryset.filter(Q(isPublic=True) |
                                     Q(user=self.request.user) |
                                     Q(family=userprofile.family))
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return serializers.CateogryCreateSerializer
+        else:
+            return serializers.CateogryListSerializer
+
+    def perform_create(self, serializer):
+        """Create a new category"""
+        serializer.save(user=self.request.user)

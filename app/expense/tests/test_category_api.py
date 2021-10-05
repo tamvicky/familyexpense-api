@@ -48,22 +48,46 @@ class PrivateCatApiTests(TestCase):
             'test@test.com',
             'password'
         )
-        user2 = get_user_model().objects.create_user(
-            'test2@test.com',
-            'password2'
-        )
-        family = Family.objects.create(name='Test family')
-        create_user_profile(self.user, family)
-        create_user_profile(user2, family)
-        create_sample_user_category_data(self.user, family)
-        create_sample_user_category_data(user2, family)
+        self.family = Family.objects.create(name='Test family')
         self.client = APIClient()
         self.client.force_authenticate(self.user)
 
     def test_retrieve_cats(self):
         """Test retrieving cats"""
+        user2 = get_user_model().objects.create_user(
+            'test2@test.com',
+            'password2'
+        )
+        create_user_profile(self.user, self.family)
+        create_user_profile(user2, self.family)
+        create_sample_user_category_data(self.user, self.family)
+        create_sample_user_category_data(user2, self.family)
+
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
         res = self.client.get(CAT_URL)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         # 2 - public, 2 - user, 1 - family
         self.assertEqual(len(res.data), 5)
+
+    def test_create_category_successful(self):
+        """Test creating a new category"""
+        payload = {'name': 'Test Cat', 'isPublic': False,
+                   'family': self.family.id}
+        self.client.post(CAT_URL, payload)
+
+        exists = Category.objects.filter(
+            user=self.user,
+            name=payload['name']
+        ).exists()
+
+        self.assertTrue(exists)
+
+    def test_create_category_invalid(self):
+        """Test creating a new category with invalid payload"""
+        payload = {'name': ''}
+        res = self.client.post(CAT_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
