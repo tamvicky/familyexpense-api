@@ -87,3 +87,19 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ExpenseRecord(models.Model):
+    """record for each expense"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    family = models.ForeignKey(Family, on_delete=models.CASCADE,
+                               blank=True, null=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE,
+                                 blank=False, null=False)
+    date = models.DateField(auto_now_add=True)
+    amount = models.DecimalField(max_digits=6, decimal_places=2)
+    notes = models.CharField(max_length=255, blank=True)
+    # image = models.ImageField(null=True, upload_to=recipe_image_file_path)

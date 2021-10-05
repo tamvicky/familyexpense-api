@@ -6,6 +6,7 @@ from expense import views
 
 router = DefaultRouter()
 router.register('category', views.CategoryViewSet)
+router.register('record', views.RecordViewSet)
 
 app_name = 'expense'
 
