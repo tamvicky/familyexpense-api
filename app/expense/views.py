@@ -100,3 +100,13 @@ class RecordViewSet(viewsets.ModelViewSet):
             return serializers.ExpenseRecordListSerializer
         else:
             return serializers.ExpenseRecordDetailsSerializer
+
+    def perform_create(self, serializer):
+        """Create a new record"""
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        """Update record"""
+        serializer.is_valid(raise_exception=True)
+        serializer.save()

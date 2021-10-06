@@ -452,3 +452,61 @@ class PrivateExpenseRecordApiTests(TestCase):
         self.assertEqual(record.date.strftime("%Y-%m-%d"),
                          payload['date'])
         self.assertEqual(record.notes, payload['notes'])
+
+    def test_patial_update_expense_record_exception(self):
+        """Test updating a record with put"""
+        cat_car = Category.objects.create(name='Car', isPublic=True)
+        record = create_sample_expense_record(user=self.user,
+                                              family=self.family,
+                                              category=cat_car)
+        defaults = {
+            'date': '2021-10-01',
+            'amount': 123.2,
+            'notes': 'Dinner at Restuarant A'
+        }
+
+        payload = {'date': ''}
+
+        url = detail_url(record.id)
+        res = self.client.patch(url, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+        record.refresh_from_db()
+        self.assertEqual(record.user, self.user)
+        self.assertEqual(record.family, self.family)
+        self.assertEqual(record.category, cat_car)
+        self.assertEqual(str(record.amount),
+                         "{:.2f}".format(defaults['amount']))
+        self.assertEqual(record.date.strftime("%Y-%m-%d"),
+                         defaults['date'])
+        self.assertEqual(record.notes, defaults['notes'])
+
+    def test_full_update_expense_record_exception(self):
+        """Test updating a record with put"""
+        cat_car = Category.objects.create(name='Car', isPublic=True)
+        record = create_sample_expense_record(user=self.user,
+                                              family=self.family,
+                                              category=cat_car)
+        defaults = {
+            'date': '2021-10-01',
+            'amount': 123.2,
+            'notes': 'Dinner at Restuarant A'
+        }
+
+        payload = {}
+
+        url = detail_url(record.id)
+        res = self.client.put(url, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+        record.refresh_from_db()
+        self.assertEqual(record.user, self.user)
+        self.assertEqual(record.family, self.family)
+        self.assertEqual(record.category, cat_car)
+        self.assertEqual(str(record.amount),
+                         "{:.2f}".format(defaults['amount']))
+        self.assertEqual(record.date.strftime("%Y-%m-%d"),
+                         defaults['date'])
+        self.assertEqual(record.notes, defaults['notes'])
