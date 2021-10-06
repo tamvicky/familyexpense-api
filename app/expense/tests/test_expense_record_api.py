@@ -13,7 +13,7 @@ RECORD_URL = reverse('expense:expenserecord-list')
 
 def detail_url(record_id):
     """Return category detail URL"""
-    return reverse('expense:expense-record-detail', args=[record_id])
+    return reverse('expense:expenserecord-detail', args=[record_id])
 
 
 def create_user_profile(_user, _family):
@@ -409,3 +409,46 @@ class PrivateExpenseRecordApiTests(TestCase):
         self.assertEqual(record.date.strftime("%Y-%m-%d"),
                          payload['date'])
         self.assertEqual(record.notes, '')
+
+    def test_partial_update_expense_record(self):
+        """Test updating a record with patch"""
+        cat_food = Category.objects.create(name='Food', isPublic=True)
+        record = create_sample_expense_record(user=self.user,
+                                              family=self.family,
+                                              date='2021-10-05')
+
+        payload = {'category': cat_food.id, 'notes': 'Dinner'}
+        url = detail_url(record.id)
+        self.client.patch(url, payload)
+
+        record.refresh_from_db()
+        self.assertEqual(record.notes, payload['notes'])
+        self.assertEqual(record.category, cat_food)
+
+    def test_full_update_expense_record(self):
+        """Test updating a record with put"""
+        cat_car = Category.objects.create(name='Car', isPublic=True)
+        record = create_sample_expense_record(user=self.user,
+                                              family=self.family)
+
+        payload = {
+            'user': self.user.id,
+            'family': self.family.id,
+            'category': cat_car.id,
+            'date': '2021-09-02',
+            'amount': 60,
+            'notes': 'Parking'
+        }
+
+        url = detail_url(record.id)
+        self.client.put(url, payload)
+
+        record.refresh_from_db()
+        self.assertEqual(record.user, self.user)
+        self.assertEqual(record.family, self.family)
+        self.assertEqual(record.category, cat_car)
+        self.assertEqual(str(record.amount),
+                         "{:.2f}".format(payload['amount']))
+        self.assertEqual(record.date.strftime("%Y-%m-%d"),
+                         payload['date'])
+        self.assertEqual(record.notes, payload['notes'])
