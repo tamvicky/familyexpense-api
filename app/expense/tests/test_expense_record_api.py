@@ -364,4 +364,48 @@ class PrivateExpenseRecordApiTests(TestCase):
             self.assertIn('2021-10-', data['date'])
             self.assertEqual(data['user']['email'], self.user.email)
 
-    
+    def test_create_expense_record_family(self):
+        """Test creating expense record"""
+        cat = Category.objects.create(name='Food', isPublic=True)
+        payload = {
+            'user': self.user.id,
+            'family': self.family.id,
+            'category': cat.id,
+            'date': '2021-10-01',
+            'amount': 123.2,
+            'notes': 'Dinner at Restuarant A'
+        }
+        res = self.client.post(RECORD_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        record = ExpenseRecord.objects.get(id=res.data['id'])
+        self.assertEqual(record.user, self.user)
+        self.assertEqual(record.family, self.family)
+        self.assertEqual(record.category, cat)
+        self.assertEqual(str(record.amount),
+                         "{:.2f}".format(payload['amount']))
+        self.assertEqual(record.date.strftime("%Y-%m-%d"),
+                         payload['date'])
+        self.assertEqual(record.notes, payload['notes'])
+
+    def test_create_expense_record_personal(self):
+        """Test creating expense record"""
+        cat = Category.objects.create(name='Food', isPublic=True)
+        payload = {
+            'user': self.user.id,
+            'category': cat.id,
+            'date': '2021-10-01',
+            'amount': 123.2,
+        }
+        res = self.client.post(RECORD_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        record = ExpenseRecord.objects.get(id=res.data['id'])
+        self.assertEqual(record.user, self.user)
+        self.assertEqual(record.family, None)
+        self.assertEqual(record.category, cat)
+        self.assertEqual(str(record.amount),
+                         "{:.2f}".format(payload['amount']))
+        self.assertEqual(record.date.strftime("%Y-%m-%d"),
+                         payload['date'])
+        self.assertEqual(record.notes, '')
