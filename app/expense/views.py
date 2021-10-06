@@ -45,7 +45,7 @@ class RecordViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         Retrieve the expense records for the authenticated user
-        Query Params: 
+        Query Params:
             - type: personal | family | all (default)
             - date_range: start_date,end_date in yyyy-mm-dd format
             - year: int

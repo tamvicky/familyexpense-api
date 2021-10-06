@@ -118,6 +118,9 @@ class PrivateExpenseRecordApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 1)
+        for data in res.data:
+            self.assertTrue(data['user']['email'] == self.user.email and
+                            not data['family'])
 
     def test_retrieve_family_expense_record(self):
         """
@@ -141,7 +144,8 @@ class PrivateExpenseRecordApiTests(TestCase):
         res = self.client.get(RECORD_URL, {'type': 'family'})
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res.data), 2)
+        for data in res.data:
+            self.assertEqual(data['family']['id'], self.family.id)
 
     def test_retrieve_all_expense_record_by_day(self):
         """
