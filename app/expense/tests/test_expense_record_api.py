@@ -37,6 +37,7 @@ def create_sample_expense_record(user, **params):
         'user': user,
         'family': None,
         'category': cat,
+        'date': '2021-10-01',
         'amount': 123.2,
         'notes': 'Dinner at Restuarant A'
     }

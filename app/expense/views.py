@@ -57,7 +57,7 @@ class RecordViewSet(viewsets.ModelViewSet):
         else:
             queryset = queryset.filter(user=self.request.user)
 
-        return queryset
+        return queryset.order_by('-date', '-id')
 
     def get_serializer_class(self):
         if self.request.method == 'GET':

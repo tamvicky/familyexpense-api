@@ -99,7 +99,7 @@ class ExpenseRecord(models.Model):
                                blank=True, null=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE,
                                  blank=False, null=False)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField(blank=False)
     amount = models.DecimalField(max_digits=6, decimal_places=2)
     notes = models.CharField(max_length=255, blank=True)
     # image = models.ImageField(null=True, upload_to=recipe_image_file_path)
