@@ -310,3 +310,58 @@ class PrivateExpenseRecordApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         for data in res.data:
             self.assertEqual(data['category']['id'], cat_sport.id)
+
+    def test_retrieve_expense_record_by_mutliple_query_fields(self):
+        """
+        Test retrieving expense records
+        by type, year, month, category
+        """
+        cat_sport = Category.objects.create(name='Sport', isPublic=True)
+        cat_car = Category.objects.create(name='Car', isPublic=True)
+        user2 = get_user_model().objects.create_user(
+            'test2@test.com',
+            'password'
+        )
+        create_user_profile(user2, self.family)
+
+        create_sample_expense_record(user=self.user,
+                                     family=self.family,
+                                     category=cat_sport,
+                                     date='2021-10-05')
+        create_sample_expense_record(user=self.user,
+                                     category=cat_sport,
+                                     date='2021-10-03')
+        create_sample_expense_record(user=self.user,
+                                     family=self.family,
+                                     category=cat_car,
+                                     date='2021-09-10')
+        create_sample_expense_record(user=self.user,
+                                     category=cat_car,
+                                     date='2021-08-20')
+        create_sample_expense_record(user=user2,
+                                     family=self.family,
+                                     category=cat_sport,
+                                     date='2021-10-05')
+        create_sample_expense_record(user=user2,
+                                     category=cat_sport,
+                                     date='2021-10-03')
+
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+        params = {
+            'type': 'personal',
+            'category': cat_sport.id,
+            'year': '2021',
+            'month': '10'
+        }
+
+        res = self.client.get(RECORD_URL, params)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        for data in res.data:
+            self.assertEqual(data['category']['id'], cat_sport.id)
+            self.assertIn('2021-10-', data['date'])
+            self.assertEqual(data['user']['email'], self.user.email)
+
+    
