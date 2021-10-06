@@ -510,3 +510,17 @@ class PrivateExpenseRecordApiTests(TestCase):
         self.assertEqual(record.date.strftime("%Y-%m-%d"),
                          defaults['date'])
         self.assertEqual(record.notes, defaults['notes'])
+
+    def test_delete_expense_record_exception(self):
+        """Test updating a record with put"""
+        record = create_sample_expense_record(user=self.user,
+                                              family=self.family)
+
+        record_count = ExpenseRecord.objects.all().count()
+        url = detail_url(record.id)
+        res = self.client.delete(url)
+
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+
+        record_count2 = ExpenseRecord.objects.all().count()
+        self.assertEqual(record_count-1, record_count2)
