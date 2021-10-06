@@ -45,9 +45,18 @@ class RecordViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         Retrieve the expense records for the authenticated user
+        Query Params: 
+            - type: personal | family | all (default)
+            - date_range: start_date,end_date in yyyy-mm-dd format
+            - year: int
+            - month: int
+            - day: int
+            - category: category_id
         """
-        type = self.request.query_params.get('type')
         queryset = self.queryset
+
+        # filter by type
+        type = self.request.query_params.get('type')
         if type == 'personal':
             queryset = queryset.filter(user=self.request.user)\
                         .filter(family__isnull=True)
@@ -56,6 +65,33 @@ class RecordViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(family=userprofile.family)
         else:
             queryset = queryset.filter(user=self.request.user)
+
+        # filter by date range
+        date_range = self.request.query_params.get('date_range')
+        if date_range:
+            dates = date_range.split(",")
+            if (len(dates) == 2):
+                queryset = queryset.filter(date__range=dates)
+
+        # filter by day/month/year
+        year = self.request.query_params.get('year')
+        month = self.request.query_params.get('month')
+        day = self.request.query_params.get('day')
+
+        if day and month and year:
+            queryset = queryset.filter(date__year=year,
+                                       date__month=month,
+                                       date__day=day)
+        elif month and year:
+            queryset = queryset.filter(date__year=year,
+                                       date__month=month)
+        elif year:
+            queryset = queryset.filter(date__year=year)
+
+        # filter by day/month/year
+        category = self.request.query_params.get('category')
+        if category:
+            queryset = queryset.filter(category=category)
 
         return queryset.order_by('-date', '-id')
 

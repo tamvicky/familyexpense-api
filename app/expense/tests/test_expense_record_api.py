@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.test import TestCase
+import datetime
 
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -141,3 +142,167 @@ class PrivateExpenseRecordApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 2)
+
+    def test_retrieve_all_expense_record_by_day(self):
+        """
+        Test retrieving all expense records
+        by day
+        """
+
+        create_sample_expense_record(user=self.user,
+                                     family=self.family,
+                                     date='2021-10-5')
+        create_sample_expense_record(user=self.user,
+                                     date='2021-10-5')
+        create_sample_expense_record(user=self.user,
+                                     family=self.family,
+                                     date='2021-10-4')
+        create_sample_expense_record(user=self.user,
+                                     date='2021-10-4')
+
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+        params = {
+            'year': '2021',
+            'month': '10',
+            'day': '5'
+        }
+
+        res = self.client.get(RECORD_URL, params)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        for data in res.data:
+            self.assertEqual(data['date'], '2021-10-05')
+
+    def test_retrieve_all_expense_record_by_month(self):
+        """
+        Test retrieving all expense records
+        by month
+        """
+
+        create_sample_expense_record(user=self.user,
+                                     family=self.family,
+                                     date='2021-10-5')
+        create_sample_expense_record(user=self.user,
+                                     date='2021-10-5')
+        create_sample_expense_record(user=self.user,
+                                     family=self.family,
+                                     date='2021-09-4')
+        create_sample_expense_record(user=self.user,
+                                     date='2021-08-4')
+
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+        params = {
+            'year': '2021',
+            'month': '10',
+        }
+
+        res = self.client.get(RECORD_URL, params)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        for data in res.data:
+            self.assertIn('2021-10-', data['date'])
+
+    def test_retrieve_all_expense_record_by_year(self):
+        """
+        Test retrieving all expense records
+        by year
+        """
+
+        create_sample_expense_record(user=self.user,
+                                     family=self.family,
+                                     date='2021-10-5')
+        create_sample_expense_record(user=self.user,
+                                     date='2021-10-5')
+        create_sample_expense_record(user=self.user,
+                                     family=self.family,
+                                     date='2020-10-4')
+        create_sample_expense_record(user=self.user,
+                                     date='2020-10-4')
+
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+        params = {
+            'year': '2021',
+        }
+
+        res = self.client.get(RECORD_URL, params)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        for data in res.data:
+            self.assertIn('2021-', data['date'])
+
+    def test_retrieve_all_expense_record_by_date_range(self):
+        """
+        Test retrieving all expense records
+        by year
+        """
+
+        create_sample_expense_record(user=self.user,
+                                     family=self.family,
+                                     date='2021-10-5')
+        create_sample_expense_record(user=self.user,
+                                     date='2021-09-5')
+        create_sample_expense_record(user=self.user,
+                                     family=self.family,
+                                     date='2021-08-4')
+        create_sample_expense_record(user=self.user,
+                                     date='2021-07-4')
+
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+        date1 = datetime.date(2021, 9, 1)
+        date2 = datetime.date(2021, 10, 30)
+        date_range_str = date1.strftime(
+            "%Y-%m-%d") + "," + date2.strftime("%Y-%m-%d")
+
+        # date-range f
+        params = {
+            'date_range': date_range_str
+        }
+
+        res = self.client.get(RECORD_URL, params)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        for data in res.data:
+            data_date = datetime.datetime.strptime(data['date'],
+                                                   "%Y-%m-%d").date()
+            self.assertTrue(data_date >= date1 and
+                            data_date <= date2)
+
+    def test_retrieve_all_expense_record_by_category(self):
+        """
+        Test retrieving all expense records
+        by category
+        """
+        cat_sport = Category.objects.create(name='Sport', isPublic=True)
+        cat_car = Category.objects.create(name='Car', isPublic=True)
+
+        create_sample_expense_record(user=self.user,
+                                     family=self.family,
+                                     category=cat_sport)
+        create_sample_expense_record(user=self.user,
+                                     category=cat_sport)
+        create_sample_expense_record(user=self.user,
+                                     family=self.family,
+                                     category=cat_car)
+        create_sample_expense_record(user=self.user,
+                                     category=cat_car)
+
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+        params = {
+            'category': cat_sport.id,
+        }
+
+        res = self.client.get(RECORD_URL, params)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        for data in res.data:
+            self.assertEqual(data['category']['id'], cat_sport.id)
