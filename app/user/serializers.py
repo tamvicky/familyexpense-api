@@ -5,12 +5,20 @@ from core.models import UserProfile, Family
 from rest_framework import serializers
 
 
+class UserAttrSerializer(serializers.ModelSerializer):
+    """Serializer for user avatar"""
+    class Meta:
+        model = UserProfile
+        fields = ('avatar',)
+
+
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for the users object"""
+    userprofile = UserAttrSerializer()
 
     class Meta:
         model = get_user_model()
-        fields = ('email', 'password', 'name')
+        fields = ('id', 'email', 'password', 'name', 'userprofile')
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
 
     def create(self, validated_data):
