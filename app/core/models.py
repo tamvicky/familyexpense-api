@@ -102,4 +102,4 @@ class ExpenseRecord(models.Model):
     date = models.DateField(blank=False)
     amount = models.DecimalField(max_digits=6, decimal_places=2)
     notes = models.CharField(max_length=255, blank=True)
-    # image = models.ImageField(null=True, upload_to=recipe_image_file_path)
+    image = models.ImageField(null=True, upload_to=recipe_image_file_path)
