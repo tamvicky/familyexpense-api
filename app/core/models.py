@@ -6,12 +6,12 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
 from django.conf import settings
 
 
-def recipe_image_file_path(instance, filename):
-    """Generate file path for new recipe image"""
+def record_image_file_path(instance, filename):
+    """Generate file path for new record image"""
     ext = filename.split('.')[-1]
     filename = f'{uuid.uuid4()}.{ext}'
 
-    return os.path.join('uploads/recipe/', filename)
+    return os.path.join('uploads/record/', filename)
 
 
 class UserManager(BaseUserManager):
@@ -51,7 +51,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Family(models.Model):
     """Family of users"""
     name = models.CharField(max_length=255)
-    # image = models.ImageField(null=True, upload_to=recipe_image_file_path)
 
     def __str__(self):
         return self.name
@@ -102,4 +101,4 @@ class ExpenseRecord(models.Model):
     date = models.DateField(blank=False)
     amount = models.DecimalField(max_digits=6, decimal_places=2)
     notes = models.CharField(max_length=255, blank=True)
-    image = models.ImageField(null=True, upload_to=recipe_image_file_path)
+    image = models.ImageField(null=True, upload_to=record_image_file_path)

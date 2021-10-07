@@ -1,3 +1,6 @@
+import tempfile
+import os
+from PIL import Image
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.test import TestCase
@@ -9,6 +12,11 @@ from rest_framework.test import APIClient
 from core.models import Category, Family, UserProfile, ExpenseRecord
 
 RECORD_URL = reverse('expense:expenserecord-list')
+
+
+def image_upload_url(record_id):
+    """Return URL for expense record image upload"""
+    return reverse('expense:expenserecord-upload-image', args=[record_id])
 
 
 def detail_url(record_id):
@@ -524,3 +532,39 @@ class PrivateExpenseRecordApiTests(TestCase):
 
         record_count2 = ExpenseRecord.objects.all().count()
         self.assertEqual(record_count-1, record_count2)
+
+
+class RecordImageUploadTests(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            'user@test.com',
+            'testpass'
+        )
+        self.client.force_authenticate(self.user)
+        self.record = create_sample_expense_record(user=self.user)
+
+    def tearDown(self):
+        self.record.image.delete()
+
+    def test_upload_image_to_record(self):
+        """Test uploading an image to record"""
+        url = image_upload_url(self.record.id)
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:
+            img = Image.new('RGB', (10, 10))
+            img.save(ntf, format='JPEG')
+            ntf.seek(0)
+            res = self.client.post(url, {'image': ntf}, format='multipart')
+
+        self.record.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.record.image.path))
+
+    def test_upload_image_bad_request(self):
+        """Test uploading an invalid image"""
+        url = image_upload_url(self.record.id)
+        res = self.client.post(url, {'image': 'notimage'}, format='multipart')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

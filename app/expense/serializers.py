@@ -37,7 +37,7 @@ class ExpenseRecordDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExpenseRecord
         fields = (
-            'id', 'user', 'family', 'category', 'date', 'amount', 'notes'
+            'id', 'user', 'family', 'category', 'date', 'amount', 'notes', 'image'
             )
         read_only_fields = ('id', )
 
@@ -51,9 +51,18 @@ class ExpenseRecordListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExpenseRecord
         fields = (
-            'id', 'user', 'family', 'category', 'date', 'amount', 'notes'
+            'id', 'user', 'family', 'category', 'date', 'amount', 'notes', 'image'
             )
         read_only_fields = ('id', )
+
+
+class RecordImageSerializer(serializers.ModelSerializer):
+    """Serializer for uploading images to record"""
+
+    class Meta:
+        model = ExpenseRecord
+        fields = ('id', 'image')
+        read_only_fields = ('id',)
 
 
 class ExpenseRecordSummarySerializer(serializers.ModelSerializer):

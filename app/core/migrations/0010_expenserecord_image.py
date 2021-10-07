@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='expenserecord',
             name='image',
-            field=models.ImageField(null=True, upload_to=core.models.recipe_image_file_path),
+            field=models.ImageField(null=True, upload_to=core.models.record_image_file_path),
         ),
     ]
